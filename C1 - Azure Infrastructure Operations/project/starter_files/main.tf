@@ -1,4 +1,8 @@
 provider "azurerm" {
+  subscription_id = "${var.subscription_id}"
+  client_id       = "${var.client_id}"
+  client_secret   = "${var.client_secret}"
+  tenant_id       = "${var.tenant_id}"
   features {}
 }
 
@@ -68,7 +72,7 @@ resource "azurerm_network_security_group" "webserver" {
     source_port_range          = "*"
     source_address_prefix      = "*"
     destination_port_range     = "443"
-    destination_address_prefix = azurerm_subnet.internal.address_prefix
+    destination_address_prefix = azurerm_subnet.internal.address_prefixes[0]
   }
 }
 
@@ -84,7 +88,6 @@ resource "azurerm_lb" "example" {
 }
 
 resource "azurerm_lb_backend_address_pool" "example" {
-  resource_group_name = azurerm_resource_group.main.name
   loadbalancer_id     = azurerm_lb.example.id
   name                = "BackEndAddressPool"
 }
