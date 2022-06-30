@@ -1,0 +1,9 @@
+{
+    "tagName": {
+        "type": "String",
+        "defaultValue": "default",
+        "metadata": {
+            "description": "Name of the tag"
+        }
+    }
+}
