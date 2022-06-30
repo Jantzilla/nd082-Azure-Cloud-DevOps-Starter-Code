@@ -21,7 +21,7 @@ Once you've collected your dependencies, to build your Infrastructure:
 1. **Deploy a Policy** to deny the creation of resources without tags by running `az policy definition create` followed by `az policy assignment create`
 2. **Create a Packer Template** using a `server.json` file and completing the necessary `builders` and `provisioners` sections
 3. **Create a Terraform Template** using a `variables.tf` file and a `main.tf` file that includes all of the necessary infrastructure to create a highly available, secure, and publicly accessible Ubuntu web server
-4. **Deploy your Infrastructure** by running `packer build` followed by `terraform plan -out solution.plan`
+4. **Deploy your Infrastructure** by running `packer build` followed by `terraform init`, `terraform plan`, and `terraform apply`
 5. **Clean Up** when you are finished with the deployment by running `terraform destroy`
 
 If you wish to build more than one server, repeat step 4 before destroying your infrastructure in step 5 to avoid reaching Azure usage limits.
@@ -30,9 +30,6 @@ If you wish to build more than one server, repeat step 4 before destroying your 
 Result of `az policy assignment list` after running the command above
 ![alt text](screenshots/az-policy-assignment-list.png)
 
-Result of `packer list` after running the command above
-![alt text](screenshots/az-policy-assignment-list.png)
-
-Result of `az policy assignment list` after running the command above
-![alt text](screenshots/az-policy-assignment-list.png)
+Result of `terraform plan` after running the command above
+![alt text](screenshots/terraform_plan.png)
 
