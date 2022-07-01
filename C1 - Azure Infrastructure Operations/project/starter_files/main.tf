@@ -6,6 +6,11 @@ provider "azurerm" {
   features {}
 }
 
+data "azurerm_image" "image" {
+  name                =  "ubuntuImage" 
+  resource_group_name = "packer-rg"
+}
+
 resource "azurerm_resource_group" "main" {
   name     = "${var.prefix}-resources"
   location = var.location
@@ -29,6 +34,7 @@ resource "azurerm_subnet" "internal" {
 
 
 resource "azurerm_public_ip" "pip" {
+  count               = var.instance_count
   name                = "${var.prefix}-pip"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
@@ -65,11 +71,22 @@ resource "azurerm_network_security_group" "webserver" {
   name                = "tls_webserver"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
-  security_rule {
+    security_rule {
     access                     = "Allow"
     direction                  = "Inbound"
-    name                       = "tls"
+    name                       = "vms"
     priority                   = 100
+    protocol                   = "*"
+    source_port_range          = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_port_range     = "*"
+    destination_address_prefix = azurerm_subnet.internal.address_prefixes[0]
+  }
+  security_rule {
+    access                     = "Deny"
+    direction                  = "Inbound"
+    name                       = "tls"
+    priority                   = 101
     protocol                   = "Tcp"
     source_port_range          = "*"
     source_address_prefix      = "*"
@@ -87,7 +104,7 @@ resource "azurerm_lb" "example" {
 
   frontend_ip_configuration {
     name                 = "PublicIPAddress"
-    public_ip_address_id = azurerm_public_ip.pip.id
+    public_ip_address_id = azurerm_public_ip.pip[0].id
   }
 
   tags                   = var.tags
@@ -120,6 +137,7 @@ resource "azurerm_linux_virtual_machine" "main" {
   name                            = "${var.prefix}-vm${count.index}"
   resource_group_name             = azurerm_resource_group.main.name
   location                        = azurerm_resource_group.main.location
+  source_image_id                 = data.azurerm_image.image.id
   size                            = "Standard_D2s_v3"
   admin_username                  = "adminuser"
   admin_password                  = "P@ssw0rd1234!"
@@ -129,12 +147,12 @@ resource "azurerm_linux_virtual_machine" "main" {
     azurerm_network_interface.main[count.index].id,
   ]
 
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
-  }
+#   source_image_reference {
+#     publisher = "Canonical"
+#     offer     = "UbuntuServer"
+#     sku       = "18.04-LTS"
+#     version   = "latest"
+#   }
 
   os_disk {
     storage_account_type = "Standard_LRS"
