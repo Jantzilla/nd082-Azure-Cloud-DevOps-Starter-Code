@@ -6,7 +6,7 @@ For this project, you will write a Packer template and a Terraform template to d
 ### Getting Started
 1. Clone this repository
 
-2. OPTIONAL - set the local environment variables for `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, and `ARM_SUBSCRIPTION_ID`
+2. OPTIONAL - set the local environment variables for `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID` and `ARM_TENANT_ID`
 
 3. Create your infrastructure as code by following the instructions below
 
@@ -32,4 +32,7 @@ Result of `az policy assignment list` after running the command above
 
 Result of `terraform plan` after running the command above
 ![alt text](screenshots/terraform_plan.png)
+
+Result of `terraform apply` after running the command above
+![alt text](screenshots/terraform_apply.png)
 
