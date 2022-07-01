@@ -9,10 +9,7 @@ provider "azurerm" {
 resource "azurerm_resource_group" "main" {
   name     = "${var.prefix}-resources"
   location = var.location
-}
-
-locals {
-  instance_count = 2
+  tags     = var.tags
 }
 
 resource "azurerm_virtual_network" "main" {
@@ -20,6 +17,7 @@ resource "azurerm_virtual_network" "main" {
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
+  tags                = var.tags
 }
 
 resource "azurerm_subnet" "internal" {
@@ -35,10 +33,11 @@ resource "azurerm_public_ip" "pip" {
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   allocation_method   = "Dynamic"
+  tags                = var.tags
 }
 
 resource "azurerm_network_interface" "main" {
-  count               = local.instance_count
+  count               = var.instance_count
   name                = "${var.prefix}-nic${count.index}"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
@@ -48,6 +47,8 @@ resource "azurerm_network_interface" "main" {
     subnet_id                     = azurerm_subnet.internal.id
     private_ip_address_allocation = "Dynamic"
   }
+
+  tags                            = var.tags
 }
 
 resource "azurerm_availability_set" "avset" {
@@ -57,6 +58,7 @@ resource "azurerm_availability_set" "avset" {
   platform_fault_domain_count  = 2
   platform_update_domain_count = 2
   managed                      = true
+  tags                         = var.tags
 }
 
 resource "azurerm_network_security_group" "webserver" {
@@ -74,6 +76,8 @@ resource "azurerm_network_security_group" "webserver" {
     destination_port_range     = "443"
     destination_address_prefix = azurerm_subnet.internal.address_prefixes[0]
   }
+
+  tags                         = var.tags
 }
 
 resource "azurerm_lb" "example" {
@@ -85,6 +89,8 @@ resource "azurerm_lb" "example" {
     name                 = "PublicIPAddress"
     public_ip_address_id = azurerm_public_ip.pip.id
   }
+
+  tags                   = var.tags
 }
 
 resource "azurerm_lb_backend_address_pool" "example" {
@@ -103,18 +109,18 @@ resource "azurerm_lb_nat_rule" "example" {
 }
 
 resource "azurerm_network_interface_backend_address_pool_association" "example" {
-  count                   = local.instance_count
+  count                   = var.instance_count
   backend_address_pool_id = azurerm_lb_backend_address_pool.example.id
   ip_configuration_name   = "primary"
   network_interface_id    = element(azurerm_network_interface.main.*.id, count.index)
 }
 
 resource "azurerm_linux_virtual_machine" "main" {
-  count                           = local.instance_count
+  count                           = var.instance_count
   name                            = "${var.prefix}-vm${count.index}"
   resource_group_name             = azurerm_resource_group.main.name
   location                        = azurerm_resource_group.main.location
-  size                            = "Standard_F2"
+  size                            = "Standard_D2s_v3"
   admin_username                  = "adminuser"
   admin_password                  = "P@ssw0rd1234!"
   availability_set_id             = azurerm_availability_set.avset.id
@@ -126,7 +132,7 @@ resource "azurerm_linux_virtual_machine" "main" {
   source_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
-    sku       = "16.04-LTS"
+    sku       = "18.04-LTS"
     version   = "latest"
   }
 
@@ -134,4 +140,6 @@ resource "azurerm_linux_virtual_machine" "main" {
     storage_account_type = "Standard_LRS"
     caching              = "ReadWrite"
   }
+
+  tags                   = var.tags
 }
